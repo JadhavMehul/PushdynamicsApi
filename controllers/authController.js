@@ -2,6 +2,7 @@ const pool = require('../database/dbConfig');
 const { hashPassword, verifyPassword } = require('../scripts/utils/hash');
 const { generateToken } = require('../scripts/utils/jwt');
 const nodemailer = require("nodemailer");
+require('dotenv').config();
 
 exports.registerUser = async (req, res) => {
   const { userName, email, password, confirmPassword } = req.body;
@@ -28,8 +29,8 @@ exports.registerUser = async (req, res) => {
       port: 587,
       secure: false,
       auth: {
-        user: "support@pushdynamics.co",
-        pass: "test@123@#",
+        user: process.env.SUPPORT_EMAIL,
+        pass: process.env.SUPPORT_EMAIL_PASSWORD,
       },
     });
 
