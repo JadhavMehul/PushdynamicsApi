@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const dotenv = require('dotenv');
 const app = express();
 dotenv.config();
@@ -16,7 +17,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
+app.use(cookieParser());
 
 app.use(express.json());
 
