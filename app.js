@@ -1,10 +1,22 @@
 const express = require('express');
+const cors = require("cors");
 const dotenv = require('dotenv');
 const app = express();
 dotenv.config();
 
 const productRoutes = require('./routes/products')
 const authRoutes = require('./routes/auth')
+
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 
 app.use(express.json());
 
