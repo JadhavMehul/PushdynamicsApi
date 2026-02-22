@@ -193,13 +193,25 @@ exports.getMe = async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
-    const [rows] = await pool.query("SELECT id, email, name FROM users WHERE id = ?", [decoded.id]);
+    const [rows] = await pool.query("SELECT id, email, name, email_verified_at FROM users WHERE id = ?", [decoded.id]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
+    
+    const emailVerified = rows[0].email_verified_at !== null;
 
-    return res.status(200).json({ user: rows[0] });
+    const user = {
+      id: rows[0].id,
+      email: rows[0].email,
+      name:  rows[0].name,
+      emailVerified
+    }
+    
+    // const emailVerified = [rows].email_verified_at !== null;
+
+
+    return res.status(200).json({ user });
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
