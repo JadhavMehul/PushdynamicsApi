@@ -13,6 +13,9 @@ exports.registerUser = async (req, res) => {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
+
+  console.log(userName, email, password, confirmPassword );
+
   try {
     const [checkUser] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
 
@@ -23,6 +26,11 @@ exports.registerUser = async (req, res) => {
     const hashedPassword = await hashPassword(password);
     
     const [createUserQuery] = await pool.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [userName, email, hashedPassword]);
+
+    const user = {
+      id: createUserQuery.insertId,
+      email
+    }
 
     // Send email to verify user authenticity 
 
@@ -40,19 +48,36 @@ exports.registerUser = async (req, res) => {
 
     
     await transporter.sendMail({
+      from: `"PushDynamics" <${process.env.SUPPORT_EMAIL}>`,
       to: email,
       subject: 'Email verification from pushdynamics',
       html: `<h2>Verify your email</h2></br><p>please press the link to verify your email</p></br><a href=${verificationLink}>Verify</a>`
     })
 
-    res.status(201).json({
-      message: 'User registered successfully.',
-      user: {
-        id: createUserQuery.insertId,
-        name: userName,
-        email
-      },
-    });
+    // res.status(201).json({
+    //   message: 'User registered successfully.',
+    //   user: {
+    //     id: createUserQuery.insertId,
+    //     name: userName,
+    //     email
+    //   },
+    // });
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    res
+      .cookie("accessToken", accessToken, accessCookieOptions)
+      .cookie("refreshToken", refreshToken, refreshCookieOptions)
+      .status(200)
+      .json({
+        user: {
+          id: createUserQuery.insertId,
+          email,
+          name: userName,
+          emailVerified: false,
+        },
+      });
 
   } catch (error) {
     console.log(error);
