@@ -102,6 +102,9 @@ exports.loginUser = async (req, res) => {
     }
     
     const user = rows[0];
+    
+    const emailVerified = user.email_verified_at !== null;
+    
 
     // Verify password
     const isMatch = await verifyPassword(password, user.password);
@@ -135,6 +138,7 @@ exports.loginUser = async (req, res) => {
           id: user.id,
           email: user.email,
           name: user.name,
+          emailVerified
         },
       });
     
