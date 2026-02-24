@@ -157,20 +157,27 @@ exports.refreshToken = async (req, res) => {
   const token = req.cookies.refreshToken;
 
   if (!token) {
-    return res.status(401).json({ error: "No refresh token." });
+    return res.status(401).json({ error: 'No refresh token.' });
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [
+      decoded.email,
+    ]);
 
-    const newAccessToken = generateAccessToken(decoded.id);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
 
+    const user = rows[0];
+    const newAccessToken = generateAccessToken(user);
     res
-      .cookie("accessToken", newAccessToken, accessCookieOptions)
+      .cookie('accessToken', newAccessToken, accessCookieOptions)
       .status(200)
       .json({ success: true });
   } catch (err) {
-    return res.status(403).json({ error: "Invalid refresh token." });
+    return res.status(403).json({ error: 'Invalid refresh token.' });
   }
 };
 
