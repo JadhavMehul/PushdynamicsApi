@@ -260,27 +260,44 @@ exports.verifyUser = async (req, res) => {
 
 exports.updateUserDetails = async (req, res) => {
   const { name, email, address1, address2, city, country, zipCode, newPassword, cnfNewPass } = req.body;
-
-  if (!name || !email || !address1 || !address2 || !city || !country || !zipCode || !newPassword || !cnfNewPass) {
+  
+  if (!name || !email || !address1 || !address2 || !city || !country || !zipCode ) {
     return res.status(400).json({error: 'all fields require'})
   }
 
-  if (newPassword !== cnfNewPass) {
-    return res.status(400).json({error: 'new password and confirm password must be same'})
+  if (newPassword || cnfNewPass) {
+    if (newPassword !== cnfNewPass) {
+      return res.status(400).json({error: 'new password and confirm password must be same'})
+    }
   }
 
   try {
-    const hashedPassword = await hashPassword(newPassword);
+    if (newPassword) {
+      const hashedPassword = await hashPassword(newPassword);
 
-    const [updateQuery] = await pool.query(
-      'UPDATE users SET name = ?, address = ?, addressL2 = ?, city = ?, country = ?, postal_code = ?, password = ? WHERE email = ?',
-      [name, address1, address2, city, country, zipCode, hashedPassword, email]
-    )
+      const [updateQuery] = await pool.query(
+        'UPDATE users SET name = ?, address = ?, addressL2 = ?, city = ?, country = ?, postal_code = ?, password = ? WHERE email = ?',
+        [name, address1, address2, city, country, zipCode, hashedPassword, email]
+      )
 
-    return res.status(200).json({
-      message: 'User details updated successfully.',
-      updateQuery
-    });
+       return res.status(200).json({
+        message: 'User details updated successfully.',
+        updateQuery
+      });
+    } else {
+      const [updateQuery] = await pool.query(
+        'UPDATE users SET name = ?, address = ?, addressL2 = ?, city = ?, country = ?, postal_code = ? WHERE email = ?',
+        [name, address1, address2, city, country, zipCode, email]
+      )
+
+       return res.status(200).json({
+        message: 'User details updated successfully.',
+        updateQuery
+      });
+    }
+    
+
+   
 
   } catch (error) {
     console.log(error);
